@@ -20,6 +20,9 @@ pub enum Error {
 
     #[error("Invalid State Error: `{0}`")]
     InvalidState(String),
+
+    #[error("Invalid Day or Part: day: `{0}`, part: `{1}`")]
+    InvalidDayOrPartArg(usize, usize),
 }
 
 impl From<StdIoError> for Error {

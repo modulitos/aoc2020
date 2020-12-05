@@ -9,4 +9,3 @@ edition = "2018"
 [dependencies]
 structopt = "0.3.20"
 thiserror = "1.0.22"
-itertools = "0.9.0"

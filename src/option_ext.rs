@@ -22,3 +22,8 @@ impl OptionExt for Option<PathBuf> {
         Ok(BufReader::new(reader))
     }
 }
+
+/// A utility function that helps us with testing by leveraging the OptionExt trait above.
+pub fn convert_path_buf(path_buf: Option<PathBuf>) -> io::Result<BufReader<Box<dyn Read>>> {
+    path_buf.try_into()
+}
