@@ -22,15 +22,54 @@ pub fn part_1(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<()> {
 
     println!("reading input lines: {:?}", receipts);
 
-    println!("ok!");
+    let mut start = 0;
+    let mut end = receipts.len() - 1;
+    loop {
+        match (receipts.get(start), receipts.get(end)) {
+            (Some(start_receipt), Some(end_receipt)) if start_receipt == end_receipt => {
+                println!("none found!");
+                return Ok(());
+            }
+            (Some(start_receipt), Some(end_receipt))
+                if start_receipt.value + end_receipt.value > 2020 =>
+            {
+                end -= 1;
+            }
+            (Some(start_receipt), Some(end_receipt))
+                if start_receipt.value + end_receipt.value < 2020 =>
+            {
+                start += 1;
+            }
+            (Some(start_receipt), Some(end_receipt))
+                if start_receipt.value + end_receipt.value == 2020 =>
+            {
+                println!(
+                    "receipt start: {:?}, receipt end: {:?}, product: {}",
+                    start_receipt,
+                    end_receipt,
+                    start_receipt.value * end_receipt.value
+                );
+                return Ok(());
+            }
+            _ => {
+                return Err(Error::InvalidState(format!(
+                    "invalid state for start: {} and end: {}",
+                    start, end
+                )));
+            }
+        }
+    }
+}
 
+pub fn part_2(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<()> {
+    let receipts = get_receipts(buf_reader)?;
     Ok(())
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
 struct Receipt {
-    id: usize,
     value: u32,
+    id: usize,
 }
 
 impl TryFrom<(usize, String)> for Receipt {

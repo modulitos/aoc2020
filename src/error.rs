@@ -17,6 +17,9 @@ pub enum Error {
 
     #[error("Parse IntError")]
     ParseIntError(#[from] ParseIntError),
+
+    #[error("Invalid State Error: `{0}`")]
+    InvalidState(String),
 }
 
 impl From<StdIoError> for Error {
