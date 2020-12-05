@@ -1,4 +1,4 @@
-pub use part_1::part_1;
-pub use part_1::part_2;
+pub use solution::part_1;
+pub use solution::part_2;
 
-mod part_1;
+mod solution;
