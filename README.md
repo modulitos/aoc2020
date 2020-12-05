@@ -6,7 +6,9 @@ implementations from previous days.
 ## Running a solutions:
 To use the cli:
 
->cargo run <day> <part> <path to file>
+> cargo run `<day>` `<part>` `<path to file>`
+
+where `day` is [1-25], `part` is `[1-2]`, and `path to file` is the relative path to the input file.
 
 eg:
 
