@@ -59,17 +59,7 @@ fn search_combinations(receipts: &Vec<Receipt>, third: Option<&Receipt>) -> Resu
 
 pub fn part_1(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<Option<u32>> {
     let receipts = get_receipts(buf_reader)?;
-
-    match search_combinations(&receipts, None)? {
-        Some(product) => {
-            println!("product: {}", product);
-            Ok(Some(product))
-        }
-        None => {
-            println!("none found!");
-            Ok(None)
-        }
-    }
+    search_combinations(&receipts, None)
 }
 
 pub fn part_2(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<Option<u32>> {
