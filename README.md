@@ -8,12 +8,13 @@ To use the cli:
 
 > cargo run `<day>` `<part>` `<path to file>`
 
-where `day` is [1-25], `part` is `[1-2]`, and `path to file` is the relative path to the input file.
+where `day` is [1-25], `part` is [1-2], and `path to file` is the relative path to the input file.
 
 eg:
 
 >cargo run 1 2 src/exercises/day_01/receipts.txt
 
+will output the solution to Day 1, Part 2, using `src/exercises/day_01/receipts.txt` as the input.
 
 ## Testing:
 
