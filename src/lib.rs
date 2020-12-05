@@ -29,8 +29,8 @@ mod tests {
     }
 }
 
-pub fn aoc(day: usize, part: usize, buf_reader: BufReader<Box<dyn Read>>) -> Result<()> {
+pub fn aoc(_day: usize, _part: usize, buf_reader: BufReader<Box<dyn Read>>) -> Result<()> {
     println!("starting aoc!");
-    day_01::part_1(buf_reader);
+    day_01::part_1(buf_reader)?;
     Ok(())
 }

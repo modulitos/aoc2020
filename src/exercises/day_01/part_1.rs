@@ -1,25 +1,42 @@
-use std::io::{BufRead, BufReader, Read, Write, Error as IoError};
+use std::io::{BufRead, BufReader, Error as IoError, Read};
 
-// TODO: dry this up:
-// type Error = Box<dyn std::error::Error>;
-use crate::{Error, Result };
-// type Result<T, E = Error> = std::result::Result<T, E>;
+use crate::{Error, Result};
+use itertools::Itertools;
+use std::convert::TryFrom;
+
+fn get_receipts(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<Vec<Receipt>> {
+    Ok(buf_reader
+        .lines()
+        .collect::<Result<Vec<String>, _>>()? // elided io::IoError
+        .into_iter()
+        .enumerate()
+        .map(Receipt::try_from)
+        .collect::<Result<Vec<Receipt>, _>>()? // elided num::ParseIntError
+        .into_iter()
+        .sorted()
+        .collect())
+}
 
 pub fn part_1(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<()> {
-    let receipts = buf_reader.lines().collect::<Result<Vec<String>, IoError>>()?;
-    println!(
-        "reading input lines: {:?}",
+    let receipts = get_receipts(buf_reader)?;
 
-        // Note: we're passing in IoError explicitly. No sure why, but our crate's Error type does
-        // not seem to be reading IoError, with message: "value of type
-        // `std::result::Result<std::vec::Vec<std::string::String>, error::Error>` cannot be built
-        // from `std::iter::Iterator<Item=std::result::Result<std::string::String,
-        // std::io::Error>>`"
-
-        receipts
-    );
+    println!("reading input lines: {:?}", receipts);
 
     println!("ok!");
 
     Ok(())
+}
+
+#[derive(Debug, PartialOrd, PartialEq, Ord, Eq)]
+struct Receipt {
+    id: usize,
+    value: u32,
+}
+
+impl TryFrom<(usize, String)> for Receipt {
+    type Error = Error;
+    fn try_from(src: (usize, String)) -> Result<Self, Self::Error> {
+        let value = src.1.parse::<u32>()?;
+        Ok(Self { id: src.0, value })
+    }
 }

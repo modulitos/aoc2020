@@ -1,5 +1,4 @@
 use modulitos_2020::{Args, Result};
-use std::path::PathBuf;
 use structopt::StructOpt;
 
 use option_ext::OptionExt;

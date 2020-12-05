@@ -12,8 +12,3 @@ pub struct Args {
     #[structopt(parse(from_os_str))]
     pub input_data_file: Option<PathBuf>,
 }
-
-fn main() {
-    let opt = Args::from_args();
-    println!("{:?}", opt);
-}
