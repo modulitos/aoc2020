@@ -79,7 +79,7 @@ impl<P: Policy> FromStr for PolicyWithPassword<P> {
                     (?P<char>[a-zA-Z]{1}):
                     \s+
                     # password
-                    (?P<password>[a-zA-Z\d]+)
+                    (?P<password>[[:alpha:]]+)
                     "
             )
             .unwrap();
