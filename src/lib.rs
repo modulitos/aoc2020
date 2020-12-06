@@ -13,7 +13,7 @@ extern crate lazy_static;
 use aoc_result::AocReturn;
 pub use args::Args;
 pub use error::Error;
-use exercises::{day_01, day_02};
+use exercises::{day_01, day_02, day_03};
 use option_ext::convert_path_buf;
 use std::io::{BufReader, Read};
 use vec_ext::VecExt;
@@ -42,6 +42,7 @@ pub fn aoc(day: usize, part: usize, buf_reader: BufReader<Box<dyn Read>>) -> Res
         (1, 2) => day_01::part_2(buf_reader).map(|v| v.into()),
         (2, 1) => day_02::part_1(buf_reader).map(|v| v.into()),
         (2, 2) => day_02::part_2(buf_reader).map(|v| v.into()),
+        (3, 1) => day_03::part_1(buf_reader).map(|v| v.into()),
         _ => Err(Error::InvalidDayOrPartArg(day, part)),
     }
 }
