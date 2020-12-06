@@ -10,71 +10,28 @@ use std::str::FromStr;
 
 // Consider using a parser combinator instead of regexes here, like Nom: https://crates.io/crates/nom
 lazy_static! {
-    static ref BYR: Regex = Regex::new(
-        r"(?x)
-                    byr:(\d+)
-                    "
-    )
-    .unwrap();
+    static ref BYR: Regex = Regex::new(r"byr:(\d+)").unwrap();
 }
 lazy_static! {
-    static ref IYR: Regex = Regex::new(
-        r"(?x)
-                     iyr:(\d+)
-                    "
-    )
-    .unwrap();
+    static ref IYR: Regex = Regex::new(r"iyr:(\d+)").unwrap();
 }
 lazy_static! {
-    static ref EYR: Regex = Regex::new(
-        r"(?x)
-                    eyr:(\d+)
-                    "
-    )
-    .unwrap();
+    static ref EYR: Regex = Regex::new(r"eyr:(\d+)").unwrap();
 }
 lazy_static! {
-    static ref HGT: Regex = Regex::new(
-        r"(?x)
-                    # hgt:([[:alpha:]\ \d]+)
-                    hgt:(\S+)
-                    "
-    )
-    .unwrap();
+    static ref HGT: Regex = Regex::new(r"hgt:(\S+)").unwrap();
 }
 lazy_static! {
-    static ref HCL: Regex = Regex::new(
-        r"(?x)
-                    # hcl:([[:alpha:]a-zA-Z\#\d]+)
-                    hcl:(\S+)
-                    "
-    )
-    .unwrap();
+    static ref HCL: Regex = Regex::new(r"hcl:(\S+)").unwrap();
 }
 lazy_static! {
-    static ref ECL: Regex = Regex::new(
-        r"(?x)
-                    # ecl:([[:alpha:]a-zA-Z\#\d]+)
-                    ecl:(\S+)
-                    "
-    )
-    .unwrap();
+    static ref ECL: Regex = Regex::new(r"ecl:(\S+)").unwrap();
 }
 lazy_static! {
-    static ref PID: Regex = Regex::new(
-        r"(?x)
-                    pid:(\S+)
-                    "
-    )
-    .unwrap();
+    static ref PID: Regex = Regex::new(r"pid:(\S+)").unwrap();
 }
 lazy_static! {
-    static ref CID: Regex = Regex::new(
-        r"(?x)
-                    cid:(\S+)
-                    "
-    )
-    .unwrap();
+    static ref CID: Regex = Regex::new(r"cid:(\S+)").unwrap();
 }
 
 #[derive(Debug, Hash, Eq, PartialEq)]
@@ -89,49 +46,30 @@ enum Field {
     CountryId(String),
 }
 
+// These are the regexes we're using for validation:
 lazy_static! {
-    static ref HEIGHT_PARSER: Regex = Regex::new(
-        r"(?x)
-                    ^(?P<value>\d+)(?P<unit>in|cm)$
-                    "
-    )
-    .unwrap();
+    static ref HEIGHT_PARSER: Regex = Regex::new(r"^(?P<value>\d+)(?P<unit>in|cm)$").unwrap();
 }
 
 lazy_static! {
-    static ref HAIR_COLOR_PARSER: Regex = Regex::new(
-        r"(?x)
-                    ^\#([0-9a-f]{6})$
-                    "
-    )
-    .unwrap();
+    static ref HAIR_COLOR_PARSER: Regex = Regex::new(r"^\#([0-9a-f]{6})$").unwrap();
 }
 
 lazy_static! {
-    static ref EYE_COLOR_PARSER: Regex = Regex::new(
-        r"(?x)
-                    ^(amb|blu|brn|gry|grn|hzl|oth)$
-                    "
-    )
-    .unwrap();
+    static ref EYE_COLOR_PARSER: Regex = Regex::new(r"^(amb|blu|brn|gry|grn|hzl|oth)$").unwrap();
 }
 
 lazy_static! {
-    static ref PASSPORT_ID_PARSER: Regex = Regex::new(
-        r"(?x)
-                    ^(\d{9})$
-                    "
-    )
-    .unwrap();
+    static ref PASSPORT_ID_PARSER: Regex = Regex::new(r"^(\d{9})$").unwrap();
 }
 impl Field {
     fn is_valid_part_2(&self) -> bool {
         use Field::*;
         // TODO: we can model this better with a "ValidPassportInput" struct...
         match self {
-            BirthYear(field) => &1920 <= field && field <= &2002,
-            IssueYear(field) => &2010 <= field && field <= &2020,
-            ExpirationYear(field) => &2020 <= field && field <= &2030,
+            BirthYear(1920..=2002) => true,
+            IssueYear(2010..=2020) => true,
+            ExpirationYear(2020..=2030) => true,
             Height(field) => {
                 if let Some(caps) = HEIGHT_PARSER.captures(&field) {
                     match (caps["value"].parse::<u16>(), &caps["unit"]) {
@@ -156,16 +94,16 @@ impl Field {
                 } else {
                     false
                 }
-            },
+            }
             PassportId(field) => {
                 if let Some(caps) = PASSPORT_ID_PARSER.captures(&field) {
                     caps[0].parse::<u64>().is_ok()
                 } else {
                     false
                 }
-
-            },
+            }
             CountryId(_) => true,
+            _ => false,
         }
     }
 }
@@ -194,9 +132,7 @@ impl PassportInput {
     }
 
     fn is_valid_part_2(&self) -> bool {
-        self.is_valid() && self.fields.iter().all(|field| {
-            field.is_valid_part_2()
-        })
+        self.is_valid() && self.fields.iter().all(|field| field.is_valid_part_2())
     }
 }
 
