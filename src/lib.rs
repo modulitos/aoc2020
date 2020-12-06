@@ -43,6 +43,7 @@ pub fn aoc(day: usize, part: usize, buf_reader: BufReader<Box<dyn Read>>) -> Res
         (2, 1) => day_02::part_1(buf_reader).map(|v| v.into()),
         (2, 2) => day_02::part_2(buf_reader).map(|v| v.into()),
         (3, 1) => day_03::part_1(buf_reader).map(|v| v.into()),
+        (3, 2) => day_03::part_2(buf_reader).map(|v| v.into()),
         _ => Err(Error::InvalidDayOrPartArg(day, part)),
     }
 }

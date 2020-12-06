@@ -73,8 +73,8 @@ impl FromStr for Area {
     }
 }
 
-struct Simulation {
-    area: Area,
+struct Simulation<'a> {
+    area: &'a Area,
     user: Coordinate,
 }
 
@@ -84,18 +84,22 @@ struct Movement {
     dy: i32, // abs value must be less than height of Area
 }
 
-impl Movement {
-}
+impl Movement {}
 
-impl Simulation {
+impl<'a> Simulation<'a> {
+
+    fn new(area: &'a Area) -> Self {
+        Self {
+            area,
+            user: Coordinate {x: 0, y: 0}
+        }
+    }
     fn create_movement(&self, dx: i32, dy: i32) -> Result<Movement> {
-        let movement = Movement {
-            dx,
-            dy
-        };
+        let movement = Movement { dx, dy };
 
         // validate that the Movement makes sense in the context of the Area:
-        if movement.dx + (self.area.width as i32) < 0 || movement.dy + (self.area.height as i32) < 0 {
+        if movement.dx + (self.area.width as i32) < 0 || movement.dy + (self.area.height as i32) < 0
+        {
             return Err(Error::InvalidState(format!(
                 "Movement displacements exceed the Area's width: {}, height: {}, movement: {:?}",
                 self.area.width, self.area.height, movement
@@ -111,7 +115,7 @@ impl Simulation {
     //
     // User can only move off the map in the y direction. In the x direction, they just loop around.
     //
-    fn take_move(&mut self, movement: Movement) -> Option<&Land> {
+    fn take_move(&mut self, movement: &Movement) -> Option<&Land> {
         self.user.x =
             (self.user.x + (movement.dx + (self.area.width as i32)) as usize) % self.area.width;
         self.user.y = ((self.user.y as i32) + (movement.dy)) as usize;
@@ -119,33 +123,45 @@ impl Simulation {
         self.area.map.get(&self.user)
     }
 
-    // fn simulate_slope()
-}
-
-pub fn part_1(mut buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
-    let mut input = String::new();
-    buf_reader.read_to_string(&mut input)?;
-    let area = input.parse::<Area>()?;
-    let mut simulation = Simulation {
-        area,
-        user: Coordinate { x: 0, y: 0 },
-    };
-    let mut trees = 0;
-    loop {
-        // if simulation.user.
-        match simulation.take_move(simulation.create_movement( 3, 1 )?) {
-            Some(&Land::Tree) => trees += 1,
-            Some(&Land::Open) => {}
-            None => {
-                // We're off the map - we've finished!
-                return Ok(trees);
+    fn run(mut self, dx: i32, dy: i32) -> Result<u64> {
+        let mut trees = 0;
+        let movement = self.create_movement(dx, dy)?;
+        loop {
+            match self.take_move(&movement) {
+                Some(&Land::Tree) => trees += 1,
+                Some(&Land::Open) => {}
+                None => {
+                    // We're off the map - we've finished!
+                    return Ok(trees);
+                }
             }
         }
     }
 }
 
-pub fn part_2(mut buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
-    Ok(42)
+pub fn part_1(mut buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u64> {
+    let mut input = String::new();
+    buf_reader.read_to_string(&mut input)?;
+    let area = input.parse::<Area>()?;
+    let simulation = Simulation::new(&area);
+    simulation.run(3, 1)
+}
+
+pub fn part_2(mut buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u64> {
+    let mut input = String::new();
+    buf_reader.read_to_string(&mut input)?;
+    let area = input.parse::<Area>()?;
+    Ok(vec![
+        Simulation::new(&area).run(1, 1),
+        Simulation::new(&area).run(3, 1),
+        Simulation::new(&area).run(5, 1),
+        Simulation::new(&area).run(7, 1),
+        Simulation::new(&area).run(1, 2),
+    ]
+    .into_iter()
+    .collect::<Result<Vec<u64>>>()?
+    .into_iter()
+    .product())
 }
 
 #[test]
@@ -163,5 +179,22 @@ fn test_part_1() -> Result<()> {
     let res = part_1(convert_path_buf(p)?)?;
 
     assert_eq!(res, 176);
+    Ok(())
+}
+#[test]
+fn test_part_2_example() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_03/test.txt"));
+    let res = part_2(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 336);
+    Ok(())
+}
+
+#[test]
+fn test_part_2() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_03/area.txt"));
+    let res = part_2(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 5872458240);
     Ok(())
 }

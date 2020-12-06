@@ -5,6 +5,7 @@
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AocReturn {
     U32Item(u32),
+    U64Item(u64),
     U32ItemOpt(Option<u32>),
     U32List(Vec<u32>),
     UsizeList(Vec<usize>),
@@ -19,6 +20,12 @@ impl From<Option<u32>> for AocReturn {
 impl From<u32> for AocReturn {
     fn from(item: u32) -> Self {
         Self::U32Item(item)
+    }
+}
+
+impl From<u64> for AocReturn {
+    fn from(item: u64) -> Self {
+        Self::U64Item(item)
     }
 }
 
