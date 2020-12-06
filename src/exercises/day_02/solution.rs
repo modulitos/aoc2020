@@ -23,15 +23,38 @@ impl Policy for Policy1 {
         Self {
             range: std::ops::Range {
                 start: first,
-                end: second + 1,
+                end: second + 1, // the "end" of a range is exclusive
             },
-            char
+            char,
         }
     }
 
     fn is_valid(&self, pw: &Password) -> bool {
         self.range
             .contains(&(pw.chars().filter(|char| char == &self.char).count() as u8))
+    }
+}
+
+struct Policy2 {
+    pos_1: u8,
+    pos_2: u8,
+    char: char,
+}
+
+impl Policy for Policy2 {
+    fn new(first: u8, second: u8, char: char) -> Self {
+        Self {
+            pos_1: first - 1,  // normalize from 1-index to 0-index
+            pos_2: second - 1,
+            char,
+        }
+    }
+
+    fn is_valid(&self, pw: &Password) -> bool {
+        match (&pw.chars().nth(usize::from(self.pos_1)), &pw.chars().nth(usize::from(self.pos_2))) {
+            (Some(first), Some(second)) => (first == &self.char) ^ (second == &self.char),
+            _ => false
+        }
     }
 }
 
@@ -67,7 +90,7 @@ impl<P: Policy> FromStr for PolicyWithPassword<P> {
         let policy = P::new(
             caps["range_low"].parse()?,
             caps["range_high"].parse::<u8>()?,
-            caps["char"].parse()?
+            caps["char"].parse()?,
         );
         let password = caps["password"].parse()?;
 
@@ -75,7 +98,9 @@ impl<P: Policy> FromStr for PolicyWithPassword<P> {
     }
 }
 
-fn get_policies<P: Policy>(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<Vec<PolicyWithPassword<P>>> {
+fn get_policies<P: Policy>(
+    buf_reader: BufReader<Box<dyn Read + '_>>,
+) -> Result<Vec<PolicyWithPassword<P>>> {
     buf_reader
         .lines()
         .into_iter()
@@ -94,7 +119,12 @@ pub fn part_1(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
         .count() as u32)
 }
 pub fn part_2(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
-    Ok(42)
+    let policies_with_passwords: Vec<PolicyWithPassword<Policy2>> = get_policies(buf_reader)?;
+
+    Ok(policies_with_passwords
+        .into_iter()
+        .filter(|PolicyWithPassword((policy, password))| policy.is_valid(password))
+        .count() as u32)
 }
 
 #[test]
@@ -128,5 +158,23 @@ fn test_part_1() -> Result<()> {
     let res = part_1(convert_path_buf(p)?)?;
 
     assert_eq!(res, 550);
+    Ok(())
+}
+
+#[test]
+fn test_part_2_example() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_02/test.txt"));
+    let res = part_2(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 1);
+    Ok(())
+}
+
+#[test]
+fn test_part_2() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_02/passwords.txt"));
+    let res = part_2(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 634);
     Ok(())
 }
