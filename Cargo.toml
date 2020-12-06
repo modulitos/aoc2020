@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 structopt = "0.3.20"
 thiserror = "1.0.22"
+regex = "1.4.2"
+lazy_static = "1.4.0"
