@@ -70,38 +70,22 @@ impl Field {
             BirthYear(1920..=2002) => true,
             IssueYear(2010..=2020) => true,
             ExpirationYear(2020..=2030) => true,
-            Height(field) => {
-                if let Some(caps) = HEIGHT_PARSER.captures(&field) {
-                    match (caps["value"].parse::<u16>(), &caps["unit"]) {
-                        (Ok(value), "cm") => 150 <= value && value <= 193,
-                        (Ok(value), "in") => 59 <= value && value <= 76,
-                        _ => false,
-                    }
-                } else {
-                    false
+            Height(field) => HEIGHT_PARSER.captures(&field).map_or(false, |caps| {
+                match (caps["value"].parse::<u16>(), &caps["unit"]) {
+                    (Ok(value), "cm") => 150 <= value && value <= 193,
+                    (Ok(value), "in") => 59 <= value && value <= 76,
+                    _ => false,
                 }
-            }
-            HairColor(field) => {
-                if let Some(caps) = HAIR_COLOR_PARSER.captures(&field) {
-                    caps[0].parse::<String>().is_ok()
-                } else {
-                    false
-                }
-            }
-            EyeColor(field) => {
-                if let Some(caps) = EYE_COLOR_PARSER.captures(&field) {
-                    caps[0].parse::<String>().is_ok()
-                } else {
-                    false
-                }
-            }
-            PassportId(field) => {
-                if let Some(caps) = PASSPORT_ID_PARSER.captures(&field) {
-                    caps[0].parse::<u64>().is_ok()
-                } else {
-                    false
-                }
-            }
+            }),
+            HairColor(field) => HAIR_COLOR_PARSER
+                .captures(&field)
+                .map_or(false, |caps| caps[0].parse::<String>().is_ok()),
+            EyeColor(field) => EYE_COLOR_PARSER
+                .captures(&field)
+                .map_or(false, |caps| caps[0].parse::<String>().is_ok()),
+            PassportId(field) => PASSPORT_ID_PARSER
+                .captures(&field)
+                .map_or(false, |caps| caps[0].parse::<String>().is_ok()),
             CountryId(_) => true,
             _ => false,
         }
