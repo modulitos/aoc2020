@@ -30,3 +30,4 @@ eg:
 ## lessons learned
 
 Day 5: Leveraging trait inheritance, and specifying the associated types in the inherited trait.
+Day 6: Using `.fold_first`, which is only available on Rust nightly.
