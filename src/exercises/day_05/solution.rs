@@ -5,6 +5,7 @@ use crate::{Error, Result};
 use std::boxed::Box;
 use std::path::PathBuf;
 
+use crate::vec_ext::VecExt;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
@@ -137,7 +138,34 @@ pub fn part_1(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
 }
 
 pub fn part_2(buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
-    Ok(42)
+    let seat_ids = buf_reader
+        .lines()
+        .into_iter()
+        .map(|line| Ok(line?.parse::<SeatAssignment>()?.get_seat_id()))
+        .collect::<Result<Vec<u32>>>()?
+        .sorted();
+
+    // NOTE: we can get better perf by using a binary search.
+    let (min_seat_index, min_seat_id) = seat_ids
+        .iter()
+        .enumerate()
+        .min()
+        .ok_or(Error::InvalidState("there must be a minimum.".into()))?;
+
+    seat_ids
+        .iter()
+        .enumerate()
+        .find_map(|(seat_index, &seat_id)| {
+            match (seat_id - min_seat_id) - ((seat_index - min_seat_index) as u32) {
+                0 => None,
+                1 => Some(Ok(seat_id - 1)),
+                _ => Some(Err(Error::InvalidState(format!(
+                    "this seat is out of range! index: {}, seat_id: {}",
+                    seat_index, seat_id
+                )))),
+            }
+        })
+        .ok_or(Error::InvalidState("Couldn't find our seat!".into()))?
 }
 
 #[test]
@@ -212,5 +240,13 @@ fn test_part_1() -> Result<()> {
     let res = part_1(convert_path_buf(p)?)?;
 
     assert_eq!(res, 892);
+    Ok(())
+}
+#[test]
+fn test_part_2() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_05/seat_assignments.txt"));
+    let res = part_2(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 625);
     Ok(())
 }
