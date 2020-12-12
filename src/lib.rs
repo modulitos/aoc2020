@@ -4,6 +4,7 @@
     rust_2018_idioms,
     missing_doc_code_examples
 )]
+#![feature(iterator_fold_self)]
 // To use the `unsafe` keyword, change to `#![allow(unsafe_code)]` (do not remove); aids auditing.
 #![forbid(unsafe_code)]
 
