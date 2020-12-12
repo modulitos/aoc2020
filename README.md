@@ -4,6 +4,8 @@ This crate has some scaffolding so that all solutions will exist in a single cra
 implementations from previous days.
 
 ## Running a solutions:
+**NOTE: this project only runs on the Rust Nightly toolchain**
+
 To use the cli:
 
 > cargo run `<day>` `<part>` `<path to file>`

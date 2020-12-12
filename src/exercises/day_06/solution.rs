@@ -25,17 +25,30 @@ impl FromStr for Group {
             answers
         });
 
+        // // This is the Rust stable version, which doesn't use .fold_first:
+        // let mut lines = s.lines();
+        // let first = lines.nth(0).ok_or(Error::InvalidInput(format!(
+        //     "Group must have at least one answer: {}",
+        //     s
+        // )))?.as_bytes().into_iter().collect::<HashSet<&u8>>();
+        // let all_yes_answers = lines
+        //     .fold(first, |answers, line| {
+        //         // Take the intersection between each person's answers:
+        //         &answers & &line.as_bytes().into_iter().collect::<HashSet<&u8>>()
+        //     })
+        //     .into_iter()
+        //     .cloned()
+        //     .collect::<HashSet<u8>>();
+
         let all_yes_answers = s
             .lines()
             .map(|line| line.as_bytes().into_iter().collect::<HashSet<&u8>>())
+            // .fold_first only work on Rust Nightly!
             .fold_first(|answers, line| {
                 // Take the intersection between each person's answers:
                 &answers & &line
             })
-            .ok_or(Error::InvalidState("unable to fold_first".into()))?
-            .into_iter()
-            .cloned()
-            .collect();
+            .ok_or(Error::InvalidState("unable to fold_first".into()))?.into_iter().cloned().collect();
 
         Ok(Self {
             any_yes_answers,
