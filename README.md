@@ -23,3 +23,8 @@ eg:
 
 eg:
 > cargo test day_01::solution::test_part_2_example
+
+
+## lessons learned
+
+Day 5: Leveraging trait inheritance, and specifying the associated types in the inherited trait.

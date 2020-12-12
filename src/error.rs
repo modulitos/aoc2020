@@ -1,7 +1,7 @@
+use std::char::ParseCharError as StdParseCharError;
+use std::convert::Infallible as StdInfallible;
 use std::io::Error as StdIoError;
 use std::num::ParseIntError as StdParseIntError;
-use std::convert::Infallible as StdInfallible;
-use std::char::ParseCharError as StdParseCharError;
 
 use thiserror::Error;
 
@@ -25,6 +25,9 @@ pub enum Error {
 
     #[error("Infallible Error")]
     Infallible(#[from] StdInfallible),
+
+    #[error("Invalid Input Error: `{0}`")]
+    InvalidInput(String),
 
     #[error("Invalid State Error: `{0}`")]
     InvalidState(String),
