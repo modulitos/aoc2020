@@ -10,27 +10,13 @@ use std::str::FromStr;
 
 // Consider using a parser combinator instead of regexes here, like Nom: https://crates.io/crates/nom
 lazy_static! {
-    static ref BYR: Regex = Regex::new(r"byr:(\d+)").unwrap();
-}
-lazy_static! {
-    static ref IYR: Regex = Regex::new(r"iyr:(\d+)").unwrap();
-}
-lazy_static! {
+    static ref BYR: Regex = Regex::new(r"byr:(\d+)").expect("ok");
+    static ref IYR: Regex = Regex::new(r"iyr:(\d+)").expect("ok");
     static ref EYR: Regex = Regex::new(r"eyr:(\d+)").unwrap();
-}
-lazy_static! {
     static ref HGT: Regex = Regex::new(r"hgt:(\S+)").unwrap();
-}
-lazy_static! {
     static ref HCL: Regex = Regex::new(r"hcl:(\S+)").unwrap();
-}
-lazy_static! {
     static ref ECL: Regex = Regex::new(r"ecl:(\S+)").unwrap();
-}
-lazy_static! {
     static ref PID: Regex = Regex::new(r"pid:(\S+)").unwrap();
-}
-lazy_static! {
     static ref CID: Regex = Regex::new(r"cid:(\S+)").unwrap();
 }
 
@@ -49,17 +35,8 @@ enum Field {
 // These are the regexes we're using for validation:
 lazy_static! {
     static ref HEIGHT_PARSER: Regex = Regex::new(r"^(?P<value>\d+)(?P<unit>in|cm)$").unwrap();
-}
-
-lazy_static! {
     static ref HAIR_COLOR_PARSER: Regex = Regex::new(r"^\#([0-9a-f]{6})$").unwrap();
-}
-
-lazy_static! {
     static ref EYE_COLOR_PARSER: Regex = Regex::new(r"^(amb|blu|brn|gry|grn|hzl|oth)$").unwrap();
-}
-
-lazy_static! {
     static ref PASSPORT_ID_PARSER: Regex = Regex::new(r"^(\d{9})$").unwrap();
 }
 impl Field {
