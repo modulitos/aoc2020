@@ -16,10 +16,12 @@ use std::str::FromStr;
 #[derive(Eq, PartialEq, Debug, Hash, Clone)]
 struct Bag(String); // represents the bags color
 
-#[derive(Eq, PartialEq, Debug, Hash)]
+type BagCount = u8;
+
+#[derive(Eq, PartialEq, Debug, Hash, Clone)]
 struct Rule {
     container: Bag,
-    items: Vec<(u8, Bag)>, // each tuple represents the number of bags that can fit inside the container.
+    items: Vec<(BagCount, Bag)>, // each tuple represents the number of bags that can fit inside the container.
 }
 
 impl FromStr for Rule {
@@ -96,29 +98,51 @@ impl FromStr for Rule {
 
 // mapping of bags to their valid containers.
 #[derive(Debug)]
-struct BagsMap(HashMap<Bag, HashSet<Bag>>);
+struct BagsMap {
+    // maps a bag to the bags which contain it:
+    items_to_containers: HashMap<Bag, HashSet<Bag>>,
+    // maps a bag to the count and type of bag that it contains:
+    containers_to_items: HashMap<Bag, HashSet<(BagCount, Bag)>>,
+}
 
 impl From<Vec<Rule>> for BagsMap {
     fn from(rules: Vec<Rule>) -> Self {
-        let map = rules
-            .into_iter()
-            .fold(HashMap::<Bag, HashSet<Bag>>::new(), |mut map, rule| {
+        let items_to_containers = rules.iter().cloned().fold(
+            HashMap::<Bag, HashSet<Bag>>::new(),
+            |mut items_map, rule| {
                 let container = rule.container;
                 rule.items.into_iter().for_each(|(_, item)| {
-                    let containers = map.entry(item).or_default();
+                    let containers = items_map.entry(item).or_default();
                     containers.insert(container.clone());
                 });
                 // make sure we have a mapping for our containers as well, even if it's empty:
-                map.entry(container).or_default();
+                items_map.entry(container).or_default();
 
-                map
-            });
-        Self(map)
+                items_map
+            },
+        );
+
+        let containers_to_items = rules.into_iter().fold(
+            HashMap::<Bag, HashSet<(BagCount, Bag)>>::new(),
+            |mut containers_map, rule| {
+                let container = rule.container;
+                let items = containers_map.entry(container).or_default();
+                items.extend(HashSet::<(BagCount, Bag)>::from_iter(
+                    rule.items.into_iter(),
+                ));
+                containers_map
+            },
+        );
+
+        Self {
+            items_to_containers,
+            containers_to_items,
+        }
     }
 }
 
 impl BagsMap {
-    // Performs a BFS for all bags that contain the provided bag
+    // Returns all bags that contain the provided bag, using BFT
     fn count_containing_bags(&self, bag: Bag) -> Result<u32> {
         let mut to_visit = HashSet::<&Bag>::from_iter(vec![&bag].into_iter());
         let mut visited = HashSet::<&Bag>::new();
@@ -131,10 +155,12 @@ impl BagsMap {
             let to_visit_next = to_visit
                 .iter()
                 .map(|item_bag| {
-                    self.0.get(item_bag).ok_or(Error::InvalidState(format!(
-                        "Item bag is not found in our bag map! {:?}",
-                        item_bag
-                    )))
+                    self.items_to_containers
+                        .get(item_bag)
+                        .ok_or(Error::InvalidState(format!(
+                            "Item bag is not found in our bag map! {:?}",
+                            item_bag
+                        )))
                 })
                 .collect::<Result<Vec<&HashSet<Bag>>>>()?
                 .into_iter()
@@ -151,6 +177,26 @@ impl BagsMap {
             visited.extend(&old_visited);
         }
     }
+
+    // Returns total number bags that the provided bag contains, via DFT
+    //
+    // NOTE: We can avoid blowing the stack by using tail recursion or a stack/iterative approach.
+    fn count_item_bags(&self, bag: &Bag) -> Result<u32> {
+        Ok(self
+            .containers_to_items
+            .get(bag)
+            .ok_or(Error::InvalidState(format!(
+                "No bag container found in container_to_itmes: {:?}",
+                bag
+            )))?
+            .iter()
+            .map(|(count, item)| {
+                Ok(u32::from(*count) + (u32::from(*count) * self.count_item_bags(item)?))
+            })
+            .collect::<Result<Vec<u32>>>()?
+            .into_iter()
+            .sum::<u32>())
+    }
 }
 
 pub fn part_1(mut buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
@@ -164,7 +210,13 @@ pub fn part_1(mut buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
 }
 
 pub fn part_2(mut buf_reader: BufReader<Box<dyn Read + '_>>) -> Result<u32> {
-    Ok(32)
+    let map = BagsMap::from(
+        buf_reader
+            .lines()
+            .map(|line| line?.parse::<Rule>())
+            .collect::<Result<Vec<Rule>>>()?,
+    );
+    map.count_item_bags(&Bag("shiny gold".into()))
 }
 
 #[test]
@@ -203,26 +255,49 @@ fn test_parse_rule() -> Result<()> {
 }
 
 #[test]
-fn test_parse_bags_map() -> Result<()> {
+fn test_parse_bag_containers_map() -> Result<()> {
     let map = BagsMap::from(vec![
         "dark orange bags contain 3 bright white bags, 4 muted yellow bags.".parse::<Rule>()?,
         "bright white bags contain 1 shiny gold bag.".parse::<Rule>()?,
         "faded blue bags contain no other bags.".parse::<Rule>()?,
     ]);
 
-    assert_eq!(map.0.len(), 5);
+    assert_eq!(map.items_to_containers.len(), 5);
     assert_eq!(
-        map.0
+        map.items_to_containers
             .get(&Bag("dark orange".into()))
             .map(|items| items.len()),
         Some(0)
     );
     assert_eq!(
-        map.0.get(&Bag("shiny gold".into())),
+        map.items_to_containers.get(&Bag("shiny gold".into())),
         Some(&HashSet::from_iter(
             vec![Bag("bright white".into())].into_iter()
         ))
     );
+    Ok(())
+}
+
+#[test]
+fn test_parse_bag_items_map() -> Result<()> {
+    let map = BagsMap::from(vec![
+        "dark orange bags contain 3 bright white bags, 4 muted yellow bags.".parse::<Rule>()?,
+        "bright white bags contain 1 shiny gold bag.".parse::<Rule>()?,
+        "faded blue bags contain no other bags.".parse::<Rule>()?,
+    ]);
+
+    assert_eq!(map.containers_to_items.len(), 3);
+    assert_eq!(
+        map.containers_to_items.get(&Bag("dark orange".into())),
+        Some(&HashSet::from_iter(
+            vec![
+                (3, Bag("bright white".into())),
+                (4, Bag("muted yellow".into()))
+            ]
+            .into_iter()
+        ))
+    );
+    assert_eq!(map.containers_to_items.get(&Bag("shiny gold".into())), None);
     Ok(())
 }
 
@@ -232,5 +307,32 @@ fn test_part_1_example() -> Result<()> {
     let res = part_1(convert_path_buf(p)?)?;
 
     assert_eq!(res, 4);
+    Ok(())
+}
+
+#[test]
+fn test_part_1() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_07/rules.txt"));
+    let res = part_1(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 257);
+    Ok(())
+}
+
+#[test]
+fn test_part_2_example() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_07/test.txt"));
+    let res = part_2(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 32);
+    Ok(())
+}
+
+#[test]
+fn test_part_2_example_2() -> Result<()> {
+    let p = Some(PathBuf::from("./src/exercises/day_07/test_2.txt"));
+    let res = part_2(convert_path_buf(p)?)?;
+
+    assert_eq!(res, 126);
     Ok(())
 }
